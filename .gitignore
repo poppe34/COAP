@@ -16,3 +16,6 @@
 *.exe
 *.out
 *.app
+
+# OS FILES
+SConscript
