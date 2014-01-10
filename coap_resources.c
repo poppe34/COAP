@@ -93,6 +93,11 @@ void coap_resourceRegisterAttribute(coap_resource_t *rSrc, const char *key, cons
 
 }
 
+coap_attribute_t *coap_resourceContainsAttribute(coap_resource_t *rSrc, const char *key)
+{
+
+}
+
 
 uint32_t coap_buildURI(coap_pkt_t *pkt)
 {
@@ -318,22 +323,67 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	//FIXME: I need to be able to send this in blocks.  Right now I am going to assume that it fits fine into the buffer but in the future that will not be the case
 	char buf[512];
 	char *ptr = buf;
-	coap_attribute_t attrs;
+	coap_attribute_t *attrs;
+	coap_option_t *opt;
 
-	while(rSrc)
+	rSrc = (coap_resource_t *)coapRSrcList.first;
+	/**
+	 * FIXME even numbers right now have quotes around it
+	 * TODO implement query filter functionality... Looks tough
+	 */
+
+	opt = coap_findOption(pkt, coap_uri_query);
+
+	if(opt)
 	{
-		//URI-Reference
-		*ptr++ = '<';
-		strcpy(ptr, rSrc->fullUri);
-		ptr += strlen();
-		*ptr++ = '>';
+		while(rSrc)
+		{
+			if(coap_resourceContainsQuery(rSrc, opt))
+			{
 
-		//link-params
-		attrs = rSrc->attrList.first
-		while
+			}
+		}
+	} else
+	{
+		while(rSrc)
+		{
+			ptr = coap_printResource(rSrc, ptr);
+			rSrc = rSrc->next;
+		}
 	}
 }
 
+static uint8_t
+
+static char *coap_printResource(coap_resource_t *rSrc, char *ptr)
+{
+	 // This gives me the format ---> <URI>;attr="value";attr="value, <URI>;attr="value"
+	coap_attribute_t *attrs;
+	//URI-Reference
+	*ptr++ = '<';
+	strcpy(ptr, rSrc->fullUri);
+	ptr += strlen(rSrc->fullUri);
+	*ptr++ = '>';
+
+	//link-params
+	attrs = rSrc->attrList.first;
+	while(attrs)
+	{
+		*ptr++ = ';';
+		strcpy(ptr, attrs->key);
+		ptr += strlen(attrs->key);
+		*ptr++ = '=';
+		*ptr++ = '"';
+		strcpy(ptr, attrs->value);
+		ptr += strlen(attrs->value);
+		*ptr++ = '"';
+		attrs = attrs->next;
+	}
+	if(rSrc = rSrc->next)
+		*ptr++ = ',';
+
+	return ptr;
+}
 static int coap_findWithHash(coap_resource_t *rSrc, uint32_t *hash)
 {
 	LWIP_DEBUGF(COAP_DEBUG, ("Find Hash: %i compare Hash: %i\n", *hash, rSrc->fullUriHash));
