@@ -70,13 +70,13 @@ static void coap_defaultGet(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	memset(&outPkt, 0, sizeof(coap_pkt_t));
 
 	coap_pkt_hdr_t header;
-	coap_data_t data;
+
 	uint8_t buf[] = "Matt Poppe is Cool";
 
 	LWIP_DEBUGF(COAP_DEBUG, ("Get message received for topic: %s\n", rSrc->fullUri));
 
 	outPkt.header = &header;
-	outPkt.payload = &data;
+
 	header.bits.ver = pkt->header->bits.ver;
 	header.bits.t = COAP_ACK;
 	header.bits.tkl = pkt->header->bits.tkl;
@@ -94,8 +94,8 @@ static void coap_defaultGet(coap_pkt_t *pkt, coap_resource_t *rSrc)
 
 	header.code = COAP_CODE(205);
 
-	outPkt.payload->data = buf;
-	outPkt.payload->len = rt_strlen(outPkt.payload->data);
+	outPkt.payload.data = buf;
+	outPkt.payload.len = rt_strlen(outPkt.payload.data);
 	coap_sendPkt(&outPkt);
 
 }

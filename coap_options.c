@@ -16,7 +16,7 @@ coap_option_t *coap_findOption(coap_pkt_t *pkt, uint16_t num)
 
 	for(;opt; opt = opt->next)
 	{
-		if(opt->num = num)
+		if(opt->num == num)
 			return opt;
 	}
 
@@ -31,16 +31,23 @@ void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len
 	coap_option_t *opt = (coap_option_t *)coap_malloc(sizeof(coap_option_t) + len);
 	coap_option_t *tempOpt;
 
+	opt->num = optNum;
 	opt->len = len;
 	opt->format = optFormat;
+	opt->next = NULL;
 	memcpy(opt->value, data, len);
 
 	//Need to make sure that the options are in ascending order also if the number is the same put it after existing
 
 	tempOpt = pkt->options;
 
-	while(tempOpt->num <= opt->num )
-		SLL_NEXT(tempOpt);
+	if(tempOpt == NULL)
+		pkt->options = opt;
+	else
+	{
+		while(tempOpt->num <= opt->num )
+			SLL_NEXT(tempOpt);
 
-	sll_insertAfter(&pkt->options, opt, tempOpt);
+		sll_insertAfter(&pkt->options, opt, tempOpt);
+	}
 }

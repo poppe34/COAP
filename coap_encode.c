@@ -49,11 +49,11 @@ int coap_encodePkt(coap_pkt_t *pkt, void **buffer, uint32_t size)
 	*ptr++ = 0xff;
 
 	//Add Payload to the packet
-	if(pkt->payload)
+	if(pkt->payload.data)
 	{
-		memcpy(ptr, pkt->payload->data, pkt->payload->len);
-		size += pkt->payload->len;
-		ptr += pkt->payload->len;
+		memcpy(ptr, pkt->payload.data, pkt->payload.len);
+		size += pkt->payload.len;
+		ptr += pkt->payload.len;
 	}
 
 #if 0
@@ -126,7 +126,7 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size)
 		if(sizeNeeded > size)
 			return -1;
 
-		LWIP_ASSERT("Options are not in descending order", running_num <= opt_num);
+		LWIP_ASSERT("Options are not in descending order\n", running_num <= opt_num);
 
 		delta = opt_num - running_num;
 		deltaLen = buf++;

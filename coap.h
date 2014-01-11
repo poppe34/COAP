@@ -62,6 +62,11 @@ extern uint8_t proxy_on;
 void coapd_init(struct ip_addr *local_addr, int portNum);
 
 /**
+ * coap_client
+ */
+void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code);
+
+/**
  * coap_parse.c
  */
 uint32_t coap_Hash(const char *str);
@@ -81,6 +86,7 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size);
  * coap_option.c
  */
 coap_option_t *coap_findOption(coap_pkt_t *pkt, uint16_t num);
+void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len, uint8_t optFormat);
 
 /**
  * coap_resources.c

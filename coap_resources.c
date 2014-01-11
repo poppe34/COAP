@@ -21,8 +21,8 @@ static char rsrcDirPath[] = "/.well-known/core";
 static int coap_findWithHash(coap_resource_t *rSrc, uint32_t *hash);
 static void coap_buildRunningHash(void *data, void *arg1, void *arg2);
 static void rSrcDirCB(coap_pkt_t *, coap_resource_t *);
-
-
+static char *coap_printResource(coap_resource_t *rSrc, char *ptr);
+static uint8_t coap_resourceContainsQuery(coap_resource_t *rSrc, coap_option_t *opt);
 
 coap_resource_t *coap_resourceRegister(const char *URI)
 {
@@ -113,10 +113,10 @@ uint32_t coap_buildURI(coap_pkt_t *pkt)
 	{
 		if(uriOpt->num == coap_Uri_path)
 		{
+			*ptr++ = '/';
 			memcpy(ptr, uriOpt->value, uriOpt->len);
 			ptr += uriOpt->len;
-			if(uriOpt->next->num == coap_Uri_path)//Kinda an ugly way to make sure the end doesn't have an slash
-				*ptr++ = '/';
+
 		}
 		if(uriOpt->num == coap_uri_query)
 		{
@@ -326,11 +326,12 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	coap_attribute_t *attrs;
 	coap_option_t *opt;
 
-	rSrc = (coap_resource_t *)coapRSrcList.first;
+	rSrc = (coap_resource_t *)coapRSrcList->first;
 	/**
 	 * FIXME even numbers right now have quotes around it
 	 * TODO implement query filter functionality... Looks tough
 	 */
+	LWIP_DEBUGF(COAP_DEBUG, ("/.well-known/core CB executed\n"));
 
 	opt = coap_findOption(pkt, coap_uri_query);
 
@@ -340,7 +341,7 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 		{
 			if(coap_resourceContainsQuery(rSrc, opt))
 			{
-
+				coap_printResource(rSrc, ptr);
 			}
 		}
 	} else
@@ -351,9 +352,21 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 			rSrc = rSrc->next;
 		}
 	}
+	*ptr = '\0';
+	LWIP_DEBUGF(COAP_DEBUG,(".well-known reply: %s", buf));
+	coap_reply(pkt, buf, rt_strlen(buf), COAP_CODE(205));
+
 }
 
-static uint8_t
+static uint8_t coap_resourceContainsQuery(coap_resource_t *rSrc, coap_option_t *opt)
+{
+#if 0
+	char
+	sll_searchWithin(rSrc->attrList, coap_sllFindAttribute, opt->)
+#endif
+	return 0;
+
+}
 
 static char *coap_printResource(coap_resource_t *rSrc, char *ptr)
 {
@@ -366,7 +379,7 @@ static char *coap_printResource(coap_resource_t *rSrc, char *ptr)
 	*ptr++ = '>';
 
 	//link-params
-	attrs = rSrc->attrList.first;
+	attrs = rSrc->attrList->first;
 	while(attrs)
 	{
 		*ptr++ = ';';
@@ -419,5 +432,20 @@ void coap_resourceInit(void)
 	rsrcDir.pathList = pathList;
 
 	coap_resourceRegisterCB(&rsrcDir, rSrcDirCB, coap_get);
-	sll_addData(coapRSrcList, rsrcDir);
+	sll_addData(coapRSrcList, &rsrcDir);
+
+	LWIP_DEBUGF(COAP_DEBUG, ("Resource Init'd\n"));
+}
+
+static int coap_sllFindAttribute(void *arg1, void *arg2)
+{
+	coap_attribute_t *attr = (coap_attribute_t *)arg1;
+	char *key = (char *)arg2;
+	//TODO: in the future I need to add *for general broader searches
+	if(!rt_strcmp(attr->key, key))
+	{
+		return -1;
+	}
+
+	return 0;
 }

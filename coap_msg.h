@@ -81,7 +81,7 @@ struct coap_pkt_s {
 	coap_pkt_hdr_t *	header;
 	uint8_t  			token[9];
 	coap_option_t *		options;
-	coap_data_t	*		payload;
+	coap_data_t			payload;
 	ip_addr_t *			ip_addr;
 	uint16_t			port;
 };

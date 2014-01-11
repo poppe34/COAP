@@ -97,6 +97,7 @@ void coapd_init(struct ip_addr *local_addr, int portNum)
 	  portNum = portNum ? portNum : COAP_DEFAULT_PORT;
 	  local_addr = local_addr ? local_addr : IP_ADDR_ANY;
 
+	  coap_resourceInit();
 	  /* if dns client not yet initialized... */
 	  if(coap_pcb == NULL)
 	  {

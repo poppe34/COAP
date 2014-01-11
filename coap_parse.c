@@ -56,14 +56,14 @@ coap_err_t coap_parsePacket(coap_pkt_t *pkt, void *buf, size_t size )
 
 
 
-	if(*((uint8_t *)buf) == 0xFF && pkt->payload)
+	if(*((uint8_t *)buf) == 0xFF && pkt->payload.data)
 	{
 		size--;
 		buf++;
 
-		pkt->payload->len = size;
-		pkt->payload->data = (uint8_t *)coap_malloc(size + 1);
-		memcpy(pkt->payload->data, buf, size);
+		pkt->payload.len = size;
+		pkt->payload.data = (uint8_t *)coap_malloc(size + 1);
+		memcpy(pkt->payload.data, buf, size);
 	}
 
 
@@ -159,17 +159,17 @@ static int coap_parseOptions(coap_pkt_t *pkt, void **buffer, size_t size)
 }
 
 
+coap_attribute_t *coap_attrKeyFromOpt(coap_option_t *opt)
+{
 
+}
 
 /**
  * dismiss the payload of the coap message
  */
 coap_err_t coap_dismissPayload(coap_pkt_t *pkt)
 {
-	if(pkt->payload)
-	{
-		coap_free(pkt->payload);
-	}
+
 }
 
 
