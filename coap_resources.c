@@ -171,21 +171,25 @@ coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt)
 			LWIP_DEBUG(COAP_DEBUG, ("Get found:\n"));
 			if(foundRes->getCB)
 				foundRes->getCB(pkt, foundRes);
+			else nullCB(pkt, foundRes);
 		break;
 
 		case coap_post:
 			if(foundRes->postCB)
 				foundRes->postCB(pkt, foundRes);
+			else nullCB(pkt, foundRes);
 		break;
 
 		case coap_put:
 			if(foundRes->putCB)
 				foundRes->putCB(pkt, foundRes);
+			else nullCB(pkt, foundRes);
 		break;
 
 		case coap_delete:
 			if(foundRes->deleteCB)
 				foundRes->deleteCB(pkt, foundRes);
+			else nullCB(pkt, foundRes);
 		break;
 
 		default:
@@ -295,6 +299,7 @@ void nullCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	header.bits.ver = pkt->header->bits.ver;
 	header.bits.t = COAP_ACK;
 	header.bits.tkl = pkt->header->bits.tkl;
+	header.msgID = pkt->header->msgID;
 
 	header.code_bits.code = 4; //COAP_CODE(404);
 	header.code_bits.type = 4;

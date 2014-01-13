@@ -64,6 +64,32 @@ void sll_insertAfter(sll_list_t list, void *old, void *new)
 	}
 }
 
+void sll_insertBefore(sll_list_t list, void *old, void *new)
+{
+	RT_ASSERT(list);
+	RT_ASSERT(old);
+	RT_ASSERT(new);
+
+	sll_node_t n1 = (sll_node_t)list;
+	sll_node_t n2 = (sll_node_t)new;
+	sll_node_t n3 = (sll_node_t)old;
+
+	sll_removeData(list, n2);
+
+	if(sll_belongs(list, n3))
+	{
+
+		for(;n1 != NULL; n1=n1->next)
+			{
+				if(n1->next == n3)
+					{
+						n2->next = n3;
+						n1->next = n2;
+					}
+			}
+	}
+}
+
 int sll_removeData(sll_list_t list, void *data)
 {
 	RT_ASSERT(list);

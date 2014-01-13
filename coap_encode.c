@@ -43,7 +43,7 @@ int coap_encodePkt(coap_pkt_t *pkt, void **buffer, uint32_t size)
 	}
 	//Add options to the packet
 	if(pkt->options)
-	ptr = coap_encodeOptions(pkt, ptr, size);
+		ptr = coap_encodeOptions(pkt, ptr, size);
 
 	//Add marker for payload
 	*ptr++ = 0xff;
@@ -129,6 +129,8 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size)
 		LWIP_ASSERT("Options are not in descending order\n", running_num <= opt_num);
 
 		delta = opt_num - running_num;
+
+		//get the location that the option number and len go
 		deltaLen = buf++;
 		size--;
 		if(delta < 13)
@@ -167,10 +169,11 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size)
 			size -= 2;
 		}
 
-		memcpy(buf, opt->value, opt_len);
+		memcpy(buf, opt->value, opt->len);
+		buf += opt->len;
+		size -= opt->len;
 		running_num = opt_num;
 		SLL_NEXT(opt);
-
 	}
 
 	return buf;

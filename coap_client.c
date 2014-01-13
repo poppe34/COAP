@@ -30,6 +30,7 @@ void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code)
 	header.bits.tkl = pkt->header->bits.tkl;
 
 	header.code = code;
+	outPkt.header->msgID = pkt->header->msgID;
 
 	outPkt.ip_addr = pkt->ip_addr;
 	outPkt.port = pkt->port;
