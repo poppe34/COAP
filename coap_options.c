@@ -48,6 +48,6 @@ void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len
 		while(tempOpt->num <= opt->num )
 			SLL_NEXT(tempOpt);
 
-		sll_insertAfter(&pkt->options, opt, tempOpt);
+		sll_insertBefore(&pkt->options, opt, tempOpt);
 	}
 }
