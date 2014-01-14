@@ -44,7 +44,7 @@ typedef struct coap_uriPath coap_uriPath_t;
 typedef struct coap_option coap_option_t;
 typedef struct coap_attribute coap_attribute_t;
 
-typedef void (*coap_resourceCB)(coap_pkt_t *, coap_resource_t *);
+typedef void (*coap_resourceCB)(coap_pkt_t *, coap_resource_t *, uint16_t, uint32_t);
 
 
 typedef struct coap_data {
@@ -82,6 +82,8 @@ struct coap_pkt_s {
 	uint8_t  			token[9];
 	coap_option_t *		options;
 	coap_data_t			payload;
+	uint32_t			offset;
+	uint16_t			blockLen;
 	ip_addr_t *			ip_addr;
 	uint16_t			port;
 };
@@ -127,6 +129,9 @@ enum coap_options {
 	coap_uri_query = 15,
 	coap_accept = 17,
 	coap_location_query = 20,
+	coap_block2 = 23,
+	coap_block1 = 27,
+	coap_size2 = 28,
 	coap_proxy_uri = 35,
 	coap_proxy_scheme = 39,
 	coap_size1 = 60,

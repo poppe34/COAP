@@ -45,7 +45,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 {
 	LWIP_DEBUGF(COAP_DEBUG, ("----->Incoming packet size: %u\n", p->len));
 	coap_err_t err;
-
+	coap_resource_t *foundRsrc;
 	coap_pkt_t *pkt = (coap_pkt_t *)coap_malloc(sizeof(coap_pkt_t));
 	memset(pkt, '\0', sizeof(coap_pkt_t));
 
@@ -59,9 +59,13 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 		goto memerr;
 	}
 
+	if(coap_findOption(pkt, coap_size1))
+	{
 
-	err = coap_resourceDiscovery(pkt);
+	}
+	err = coap_resourceDiscovery(pkt, &foundRsrc);
 
+	coap_resourceCallback(pkt, foundRsrc);
 	memerr:
 	pbuf_free(p);
 	coap_free(pkt);

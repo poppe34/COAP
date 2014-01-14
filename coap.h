@@ -93,5 +93,5 @@ void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len
  */
 coap_resource_t *coap_resourceRegister(const char *URI);
 void coap_resourceRegisterCB(coap_resource_t *rSrc, coap_resourceCB callback, coap_methods_t method );
-
+coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt, coap_resource_t **foundRes);
 #endif /* COAP_H_ */

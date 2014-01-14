@@ -23,7 +23,7 @@ void coap_simpleReply(coap_pkt_t *pkt, uint8_t code)
 	header.code = code;
 	header.msgID = pkt->header->msgID;
 
-	coapd_sendto((uint8_t *)&header, 4, pkt->ip_addr, pkt->payload);
+	coapd_sendto((uint8_t *)&header, 4, pkt->ip_addr, pkt->port);
 
 }
 

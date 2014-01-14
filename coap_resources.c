@@ -20,7 +20,7 @@ static char rsrcDirPath[] = "/.well-known/core";
  */
 static int coap_findWithHash(coap_resource_t *rSrc, uint32_t *hash);
 static void coap_buildRunningHash(void *data, void *arg1, void *arg2);
-static void rSrcDirCB(coap_pkt_t *, coap_resource_t *);
+static void rSrcDirCB(coap_pkt_t *, coap_resource_t *, uint16_t, uint32_t);
 static char *coap_printResource(coap_resource_t *rSrc, char *ptr);
 static uint8_t coap_resourceContainsQuery(coap_resource_t *rSrc, coap_option_t *opt);
 
@@ -142,11 +142,10 @@ uint32_t coap_buildURI(coap_pkt_t *pkt)
 }
 
 
-coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt)
+coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt, coap_resource_t **foundRes)
 {
 	RT_ASSERT(pkt);
 	coap_option_t *uriOpt;
-	coap_resource_t *foundRes = NULL;
 	uint32_t hash;
 	//TODO: move the option variable into the function
 	//uriOpt = coap_findOption(pkt, coap_Uri_path);
@@ -158,49 +157,13 @@ coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt)
 
 	hash = coap_buildURI(pkt);
 
-	foundRes = sll_searchWithin(coapRSrcList, coap_findWithHash, &hash);
+	*foundRes = (coap_resource_t *)sll_searchWithin(coapRSrcList, coap_findWithHash, &hash);
 
 
 	//callback function for found resource method
 	//TODO:This might become its own function after we find the resource
-	if(foundRes)
-	{
-		switch(pkt->header->code_bits.type)
-		{
-		case coap_get:
-			LWIP_DEBUG(COAP_DEBUG, ("Get found:\n"));
-			if(foundRes->getCB)
-				foundRes->getCB(pkt, foundRes);
-			else nullCB(pkt, foundRes);
-		break;
+	//TODO: This needs to move to allow for block transfers
 
-		case coap_post:
-			if(foundRes->postCB)
-				foundRes->postCB(pkt, foundRes);
-			else nullCB(pkt, foundRes);
-		break;
-
-		case coap_put:
-			if(foundRes->putCB)
-				foundRes->putCB(pkt, foundRes);
-			else nullCB(pkt, foundRes);
-		break;
-
-		case coap_delete:
-			if(foundRes->deleteCB)
-				foundRes->deleteCB(pkt, foundRes);
-			else nullCB(pkt, foundRes);
-		break;
-
-		default:
-			LWIP_DEBUGF(COAP_DEBUG, ("Code Not Found\n"));
-
-		}
-	}
-	else
-	{
-		nullCB(pkt, foundRes);
-	}
 	return coap_OK;
 }
 sll_list_t coap_breakupURI(coap_resource_t *rSrc, uint8_t *uri)
@@ -248,6 +211,47 @@ sll_list_t coap_breakupURI(coap_resource_t *rSrc, uint8_t *uri)
 
 	return optList;
 }
+
+void coap_resourceCallback(coap_resource_t *foundRes, coap_pkt_t *pkt)
+{
+
+		switch(pkt->header->code_bits.type)
+		{
+		case coap_get:
+			LWIP_DEBUG(COAP_DEBUG, ("Get found:\n"));
+			if(foundRes->getCB)
+				foundRes->getCB(pkt, foundRes, 0, 0);
+			else coap_simpleReply(pkt, COAP_CODE(204));
+		break;
+
+		case coap_post:
+			LWIP_DEBUG(COAP_DEBUG, ("Post found:\n"));
+			if(foundRes->postCB)
+				foundRes->postCB(pkt, foundRes, 0, 0);
+			else coap_simpleReply(pkt, COAP_CODE(204));
+		break;
+
+		case coap_put:
+			LWIP_DEBUG(COAP_DEBUG, ("Put found:\n"));
+			if(foundRes->putCB)
+				foundRes->putCB(pkt, foundRes, 0, 0);
+			else coap_simpleReply(pkt, COAP_CODE(204));
+		break;
+
+		case coap_delete:
+			LWIP_DEBUG(COAP_DEBUG, ("Delete found:\n"));
+			if(foundRes->deleteCB)
+				foundRes->deleteCB(pkt, foundRes, 0, 0);
+			else coap_simpleReply(pkt, COAP_CODE(204));
+		break;
+
+		default:
+			LWIP_DEBUGF(COAP_DEBUG, ("Code Not Found\n"));
+
+		}
+
+}
+
 void coap_displayResources(void)
 {
 	sll_node_t curRsrc = coapRSrcList->first;
@@ -323,7 +327,7 @@ void nullCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 /**
  * LINK FORMAT
  */
-static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
+static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc, uint16_t size, uint32_t offset)
 {
 	//FIXME: I need to be able to send this in blocks.  Right now I am going to assume that it fits fine into the buffer but in the future that will not be the case
 	char buf[512];
@@ -337,6 +341,9 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	 * TODO implement query filter functionality... Looks tough
 	 */
 	LWIP_DEBUGF(COAP_DEBUG, ("/.well-known/core CB executed\n"));
+
+	//opt = coap_findOption(pkt, coap_size1)
+
 
 	opt = coap_findOption(pkt, coap_uri_query);
 
