@@ -12,6 +12,21 @@ void coap_send_nonConfirmable(uint8_t *data, size_t len, coap_methods_t method)
 
 }
 
+void coap_simpleReply(coap_pkt_t *pkt, uint8_t code)
+{
+	coap_pkt_hdr_t header;
+
+	header.bits.ver = pkt->header->bits.ver;
+	header.bits.t = COAP_ACK;
+	header.bits.tkl = pkt->header->bits.tkl;
+
+	header.code = code;
+	header.msgID = pkt->header->msgID;
+
+	coapd_sendto((uint8_t *)&header, 4, pkt->ip_addr, pkt->payload);
+
+}
+
 void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code)
 {
 	RT_ASSERT(pkt);
