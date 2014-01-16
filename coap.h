@@ -10,8 +10,10 @@
 
 #include <stdint.h>
 #include "lwip/def.h"
+#include "coap_block.h"
 #include "coap_msg.h"
 #include "coap_err.h"
+
 #include "rtthread.h"
 #include "lwip/debug.h"
 #include "sll.h"

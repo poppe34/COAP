@@ -40,6 +40,7 @@ struct coap_attribute;
 
 typedef struct coap_pkt_s coap_pkt_t;
 typedef struct coap_resource coap_resource_t;
+typedef struct coap_block coap_block_t;
 typedef struct coap_uriPath coap_uriPath_t;
 typedef struct coap_option coap_option_t;
 typedef struct coap_attribute coap_attribute_t;
@@ -47,12 +48,16 @@ typedef struct coap_attribute coap_attribute_t;
 typedef void (*coap_resourceCB)(coap_pkt_t *, coap_resource_t *, uint16_t, uint32_t);
 
 
+
+
 typedef struct coap_data {
 	uint8_t *	data;
 	uint32_t 	len;
 }coap_data_t;
 
-
+typedef struct coap_block {
+	uint16_t
+};
 /**
  * Based of RFC 6690...
  */
@@ -82,8 +87,7 @@ struct coap_pkt_s {
 	uint8_t  			token[9];
 	coap_option_t *		options;
 	coap_data_t			payload;
-	uint32_t			offset;
-	uint16_t			blockLen;
+	coap_block_t		block;
 	ip_addr_t *			ip_addr;
 	uint16_t			port;
 };
@@ -121,6 +125,7 @@ enum coap_options {
 	coap_Uri_host = 3,
 	coap_ETAG = 4,
 	coap_If_None_Match = 5,
+	coap_observe = 6,				//draft-ietf-core-observe-11
 	coap_Uri_Port = 7,
 	coap_location_path = 8,
 	coap_Uri_path = 11,
@@ -129,12 +134,12 @@ enum coap_options {
 	coap_uri_query = 15,
 	coap_accept = 17,
 	coap_location_query = 20,
-	coap_block2 = 23,
-	coap_block1 = 27,
-	coap_size2 = 28,
+	coap_block2 = 23,				//draft-ietf-core-block-14
+	coap_block1 = 27,				//draft-ietf-core-block-14
+	coap_size2 = 28,				//draft-ietf-core-block-14
 	coap_proxy_uri = 35,
 	coap_proxy_scheme = 39,
-	coap_size1 = 60,
+	coap_size1 = 60,				//draft-ietf-core-block-14
 };
 
 typedef enum coap_methods {

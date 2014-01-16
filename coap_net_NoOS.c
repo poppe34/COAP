@@ -46,6 +46,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 	LWIP_DEBUGF(COAP_DEBUG, ("----->Incoming packet size: %u\n", p->len));
 	coap_err_t err;
 	coap_resource_t *foundRsrc;
+	coap_option_t *opt;
 	coap_pkt_t *pkt = (coap_pkt_t *)coap_malloc(sizeof(coap_pkt_t));
 	memset(pkt, '\0', sizeof(coap_pkt_t));
 
@@ -58,10 +59,26 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 		LWIP_DEBUGF(COAP_DEBUG, ("Coap err: %i", err));
 		goto memerr;
 	}
-
-	if(coap_findOption(pkt, coap_size1))
+	opt = coap_findOption(pkt, coap_block2);
+	if(opt)
 	{
 
+		uint32_t tempBlock = 0;
+
+		for(uint8_t x=0; x<opt->len; x++)
+		{
+			tempBlock |= (opt->value[x] << (8 * x));
+			//tempBlock |= (opt->value[x] << (24 - (8*x)));
+		}
+
+		pkt->block.pkt = tempBlock;
+
+		LWIP_DEBUF(COAP_DEBUG, ("Block cnt: %i size: %i %s", pkt->block.bits.num, pkt->block.bits.szx,
+				(pkt->block.bits.m ? "with more to come\n":"\n")));
+
+
+		/* FIXME: I need to make this use actual block size instead of just 64 */
+		pkt->block.offset = pkt->block.bits.num * (64);
 	}
 	err = coap_resourceDiscovery(pkt, &foundRsrc);
 
