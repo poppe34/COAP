@@ -73,7 +73,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 
 		pkt->block.pkt = tempBlock;
 
-		LWIP_DEBUF(COAP_DEBUG, ("Block cnt: %i size: %i %s", pkt->block.bits.num, pkt->block.bits.szx,
+		LWIP_DEBUGF(COAP_DEBUG, ("Block cnt: %i size: %i %s", pkt->block.bits.num, pkt->block.bits.szx,
 				(pkt->block.bits.m ? "with more to come\n":"\n")));
 
 
@@ -82,7 +82,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 	}
 	err = coap_resourceDiscovery(pkt, &foundRsrc);
 
-	coap_resourceCallback(pkt, foundRsrc);
+	coap_resourceCallback(foundRsrc, pkt);
 	memerr:
 	pbuf_free(p);
 	coap_free(pkt);

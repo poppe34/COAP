@@ -20,7 +20,7 @@ static char rsrcDirPath[] = "/.well-known/core";
  */
 static int coap_findWithHash(coap_resource_t *rSrc, uint32_t *hash);
 static void coap_buildRunningHash(void *data, void *arg1, void *arg2);
-static void rSrcDirCB(coap_pkt_t *, coap_resource_t *, uint16_t, uint32_t);
+static void rSrcDirCB(coap_pkt_t *, coap_resource_t *);
 static char *coap_printResource(coap_resource_t *rSrc, char *ptr);
 static uint8_t coap_resourceContainsQuery(coap_resource_t *rSrc, coap_option_t *opt);
 
@@ -159,6 +159,7 @@ coap_err_t coap_resourceDiscovery(coap_pkt_t *pkt, coap_resource_t **foundRes)
 
 	*foundRes = (coap_resource_t *)sll_searchWithin(coapRSrcList, coap_findWithHash, &hash);
 
+	LWIP_DEBUGF(COAP_DEBUG, ("Resource found: %s\n", (*foundRes)->fullUri));
 
 	//callback function for found resource method
 	//TODO:This might become its own function after we find the resource
@@ -215,33 +216,33 @@ sll_list_t coap_breakupURI(coap_resource_t *rSrc, uint8_t *uri)
 void coap_resourceCallback(coap_resource_t *foundRes, coap_pkt_t *pkt)
 {
 
-		switch(pkt->header->code_bits.type)
+		switch(pkt->header.code_bits.type)
 		{
 		case coap_get:
 			LWIP_DEBUG(COAP_DEBUG, ("Get found:\n"));
 			if(foundRes->getCB)
-				foundRes->getCB(pkt, foundRes, 0, 0);
+				foundRes->getCB(pkt, foundRes);
 			else coap_simpleReply(pkt, COAP_CODE(204));
 		break;
 
 		case coap_post:
 			LWIP_DEBUG(COAP_DEBUG, ("Post found:\n"));
 			if(foundRes->postCB)
-				foundRes->postCB(pkt, foundRes, 0, 0);
+				foundRes->postCB(pkt, foundRes);
 			else coap_simpleReply(pkt, COAP_CODE(204));
 		break;
 
 		case coap_put:
 			LWIP_DEBUG(COAP_DEBUG, ("Put found:\n"));
 			if(foundRes->putCB)
-				foundRes->putCB(pkt, foundRes, 0, 0);
+				foundRes->putCB(pkt, foundRes);
 			else coap_simpleReply(pkt, COAP_CODE(204));
 		break;
 
 		case coap_delete:
 			LWIP_DEBUG(COAP_DEBUG, ("Delete found:\n"));
 			if(foundRes->deleteCB)
-				foundRes->deleteCB(pkt, foundRes, 0, 0);
+				foundRes->deleteCB(pkt, foundRes);
 			else coap_simpleReply(pkt, COAP_CODE(204));
 		break;
 
@@ -291,29 +292,28 @@ void nullCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 {
 	RT_ASSERT(pkt);
 	coap_pkt_t outPkt;
-	coap_pkt_hdr_t header;
 	uint8_t *newPtr;
 
 	memset(&outPkt, 0, sizeof(coap_pkt_t));
 
-	newPtr = (uint8_t *)&header;
+	newPtr = (uint8_t *)&outPkt.header;
 	LWIP_DEBUGF(COAP_DEBUG, ("Using Default Callback\n"));
-	outPkt.header = &header;
 
-	header.bits.ver = pkt->header->bits.ver;
-	header.bits.t = COAP_ACK;
-	header.bits.tkl = pkt->header->bits.tkl;
-	header.msgID = pkt->header->msgID;
 
-	header.code_bits.code = 4; //COAP_CODE(404);
-	header.code_bits.type = 4;
+	outPkt.header.bits.ver = pkt->header.bits.ver;
+	outPkt.header.bits.t = COAP_ACK;
+	outPkt.header.bits.tkl = pkt->header.bits.tkl;
+	outPkt.header.msgID = pkt->header.msgID;
+
+	outPkt.header.code_bits.code = 4; //COAP_CODE(404);
+	outPkt.header.code_bits.type = 4;
 
 	outPkt.ip_addr = pkt->ip_addr;
 	outPkt.port = pkt->port;
 
-	if(header.bits.tkl)
+	if(outPkt.header.bits.tkl)
 	{
-		size_t numTks = (size_t)pkt->header->bits.tkl;
+		size_t numTks = (size_t)pkt->header.bits.tkl;
 		memcpy(outPkt.token, pkt->token, numTks);
 	}
 
@@ -327,11 +327,16 @@ void nullCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 /**
  * LINK FORMAT
  */
-static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc, uint16_t size, uint32_t offset)
+static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 {
 	//FIXME: I need to be able to send this in blocks.  Right now I am going to assume that it fits fine into the buffer but in the future that will not be the case
-	char buf[512];
+	char buf[COAP_BLOCK_SIZE];
 	char *ptr = buf;
+
+	char *bufEnd = buf+COAP_BLOCK_SIZE;
+	uint32_t startCnt = pkt->block.offset * COAP_BLOCK_SIZE;
+	uint32_t cnt = 0;
+
 	coap_attribute_t *attrs;
 	coap_option_t *opt;
 
@@ -360,7 +365,48 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc, uint16_t size, uin
 	{
 		while(rSrc)
 		{
-			ptr = coap_printResource(rSrc, ptr);
+			 // This gives me the format ---> <URI>;attr="value";attr="value, <URI>;attr="value"
+			coap_attribute_t *attrs;
+			//URI-Reference
+
+			if(cnt != 0)
+			{
+				*ptr++ = ',';
+				cnt++;
+			}
+
+			if(startCnt <= cnt <= bufEnd )
+			{
+				*ptr++ = '<';
+			}
+				cnt++;
+
+			memcpy(ptr, rSrc->fullUri, MIN(strlen(rSrc->fullUri, (bufEnd - cnt))));
+			cnt += strlen(rSrc->fullUri, (bufEnd - cnt));
+			ptr += strlen(rSrc->fullUri, (bufEnd - cnt));
+
+			if(startCnt <= cnt <= bufEnd )
+			{
+				*ptr++ = '>';
+			}
+			cnt++;
+
+			//link-params
+			attrs = rSrc->attrList->first;
+			while(attrs)
+			{
+				*ptr++ = ';';
+				strcpy(ptr, attrs->key);
+				ptr += strlen(attrs->key);
+				*ptr++ = '=';
+				*ptr++ = '"';
+				strcpy(ptr, attrs->value);
+				ptr += strlen(attrs->value);
+				*ptr++ = '"';
+				attrs = attrs->next;
+			}
+			if(rSrc = rSrc->next)
+				*ptr++ = ',';
 			rSrc = rSrc->next;
 		}
 	}

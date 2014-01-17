@@ -69,30 +69,28 @@ static void coap_defaultGet(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	coap_pkt_t outPkt;
 	memset(&outPkt, 0, sizeof(coap_pkt_t));
 
-	coap_pkt_hdr_t header;
-
 	uint8_t buf[] = "Matt Poppe is Cool";
 
 	LWIP_DEBUGF(COAP_DEBUG, ("Get message received for topic: %s\n", rSrc->fullUri));
 
-	outPkt.header = &header;
 
-	header.bits.ver = pkt->header->bits.ver;
-	header.bits.t = COAP_ACK;
-	header.bits.tkl = pkt->header->bits.tkl;
-	header.msgID = pkt->header->msgID;
+
+	outPkt.header.bits.ver = pkt->header.bits.ver;
+	outPkt.header.bits.t = COAP_ACK;
+	outPkt.header.bits.tkl = pkt->header.bits.tkl;
+	outPkt.header.msgID = pkt->header.msgID;
 
 	outPkt.ip_addr = pkt->ip_addr;
 	outPkt.port = pkt->port;
 
-	if(header.bits.tkl)
+	if(outPkt.header.bits.tkl)
 	{
-		size_t numTks = (size_t)pkt->header->bits.tkl;
+		size_t numTks = (size_t)pkt->header.bits.tkl;
 		memcpy(&outPkt.token, pkt->token, numTks);
 		outPkt.token[numTks] = '\0';
 	}
 
-	header.code = COAP_CODE(205);
+	outPkt.header.code = COAP_CODE(205);
 
 	outPkt.payload.data = buf;
 	outPkt.payload.len = rt_strlen(outPkt.payload.data);

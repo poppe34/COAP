@@ -24,22 +24,21 @@ void coap_sendPkt(coap_pkt_t *pkt)
 int coap_encodePkt(coap_pkt_t *pkt, void **buffer, uint32_t size)
 {
 	RT_ASSERT(pkt);
-	RT_ASSERT(pkt->header);
 
 
 	uint8_t *ptr = (uint8_t *)*buffer;
 
 	//Add the header to the packet
-	memcpy(ptr, pkt->header, 4);
+	memcpy(ptr, &pkt->header, 4);
 	ptr += 4;
 	size -= 4;
 
 	//Add the Token to the packet
-	if(0 < pkt->header->bits.tkl < 9)
+	if(0 < pkt->header.bits.tkl < 9)
 	{
-		memcpy(ptr, pkt->token, pkt->header->bits.tkl);
-		ptr += pkt->header->bits.tkl;
-		size -= pkt->header->bits.tkl;
+		memcpy(ptr, pkt->token, pkt->header.bits.tkl);
+		ptr += pkt->header.bits.tkl;
+		size -= pkt->header.bits.tkl;
 	}
 	//Add options to the packet
 	if(pkt->options)

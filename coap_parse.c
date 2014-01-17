@@ -33,23 +33,23 @@ coap_err_t coap_parsePacket(coap_pkt_t *pkt, void *buf, size_t size )
 		return coap_pkt_to_small;
 	}
 
-	pkt->header = (coap_pkt_hdr_t *)buf;
+	memcpy(&pkt->header, buf, 4);
 
 	buf += sizeof(coap_pkt_hdr_t);
 	size -= sizeof(coap_pkt_hdr_t);
 
-	LWIP_DEBUGF(COAP_DEBUG, ("ver: %u t: %u tkl:%u code: %u \n", pkt->header->bits.ver,
-			pkt->header->bits.t, pkt->header->bits.tkl, pkt->header->code));
+	LWIP_DEBUGF(COAP_DEBUG, ("ver: %u t: %u tkl:%u code: %u \n", pkt->header.bits.ver,
+			pkt->header.bits.t, pkt->header.bits.tkl, pkt->header.code));
 
-	LWIP_DEBUGF(COAP_DEBUG, ("msg id: %u\n", htons(pkt->header->msgID)));
+	LWIP_DEBUGF(COAP_DEBUG, ("msg id: %u\n", htons(pkt->header.msgID)));
 
-	if(pkt->header->bits.tkl)
+	if(pkt->header.bits.tkl)
 	{
 		//FIXME: I may not always get ascii for the token fix this for all cases
-		memcpy(pkt->token, buf, pkt->header->bits.tkl);
+		memcpy(pkt->token, buf, pkt->header.bits.tkl);
 		LWIP_DEBUGF(COAP_DEBUG, ("Recieved the tk: %s\n", pkt->token));
-		buf += pkt->header->bits.tkl;
-		size -= pkt->header->bits.tkl;
+		buf += pkt->header.bits.tkl;
+		size -= pkt->header.bits.tkl;
 	}
 
 	size = coap_parseOptions(pkt, &buf, size);

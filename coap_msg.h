@@ -55,9 +55,7 @@ typedef struct coap_data {
 	uint32_t 	len;
 }coap_data_t;
 
-typedef struct coap_block {
-	uint16_t
-};
+
 /**
  * Based of RFC 6690...
  */
@@ -83,7 +81,7 @@ struct coap_option {
 
 
 struct coap_pkt_s {
-	coap_pkt_hdr_t *	header;
+	coap_pkt_hdr_t 		header;
 	uint8_t  			token[9];
 	coap_option_t *		options;
 	coap_data_t			payload;

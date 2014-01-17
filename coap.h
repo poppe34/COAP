@@ -25,6 +25,8 @@
 #define COAP_DEFAULT_PORT 5683
 #define COAP_MIN_PKT_SIZE 4
 
+#define COAP_BLOCK_SIZE	64
+
 #define NSTART 				1
 #define MAX_RETRANSMIT		4
 /* Time in ms */
@@ -55,6 +57,10 @@
 #define COAP_NON 1
 #define COAP_ACK 2
 #define COAP_RST 3
+
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif /* MIN */
 
 extern uint8_t proxy_on;
 
