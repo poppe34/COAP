@@ -72,7 +72,7 @@ void coapd_init(struct ip_addr *local_addr, int portNum);
 /**
  * coap_client
  */
-void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code);
+void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code, coap_option_t *opts);
 
 /**
  * coap_parse.c

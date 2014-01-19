@@ -327,15 +327,17 @@ void nullCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 /**
  * LINK FORMAT
  */
+
+//TODO: Make special note that the old packet is now the reply packet.... Edit it if you want options and or payload, but just \
+		replay the packet code though
 static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 {
 	//FIXME: I need to be able to send this in blocks.  Right now I am going to assume that it fits fine into the buffer but in the future that will not be the case
-	char buf[COAP_BLOCK_SIZE];
-	char *ptr = buf;
 
-	char *bufEnd = buf+COAP_BLOCK_SIZE;
-	uint32_t startCnt = pkt->block.offset * COAP_BLOCK_SIZE;
-	uint32_t cnt = 0;
+
+	declareBlockVar(buf, 64, cnt);
+
+	LWIP_DEBUGF(COAP_DEBUG, ("Blockwise receive Block:%i Start:%i End:%i\n", pkt->block.bits.num, cntStart, cntEnd));
 
 	coap_attribute_t *attrs;
 	coap_option_t *opt;
@@ -347,9 +349,6 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	 */
 	LWIP_DEBUGF(COAP_DEBUG, ("/.well-known/core CB executed\n"));
 
-	//opt = coap_findOption(pkt, coap_size1)
-
-
 	opt = coap_findOption(pkt, coap_uri_query);
 
 	if(opt)
@@ -358,10 +357,10 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 		{
 			if(coap_resourceContainsQuery(rSrc, opt))
 			{
-				coap_printResource(rSrc, ptr);
+				//coap_printResource(rSrc, ptr);
 			}
 		}
-	} else
+	}
 	{
 		while(rSrc)
 		{
@@ -369,50 +368,56 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 			coap_attribute_t *attrs;
 			//URI-Reference
 
-			if(cnt != 0)
+			if(cntRunning != 0)
 			{
-				*ptr++ = ',';
-				cnt++;
+				blockAddChar(buf, cnt, ',');
 			}
 
-			if(startCnt <= cnt <= bufEnd )
-			{
-				*ptr++ = '<';
-			}
-				cnt++;
+			blockAddChar(buf, cnt, '<');
 
-			memcpy(ptr, rSrc->fullUri, MIN(strlen(rSrc->fullUri, (bufEnd - cnt))));
-			cnt += strlen(rSrc->fullUri, (bufEnd - cnt));
-			ptr += strlen(rSrc->fullUri, (bufEnd - cnt));
+			blockAddString(buf, cnt, rSrc->fullUri);
 
-			if(startCnt <= cnt <= bufEnd )
-			{
-				*ptr++ = '>';
-			}
-			cnt++;
+			blockAddChar(buf, cnt, '>');
 
+			//blockReturn(cnt);
 			//link-params
 			attrs = rSrc->attrList->first;
 			while(attrs)
 			{
-				*ptr++ = ';';
-				strcpy(ptr, attrs->key);
-				ptr += strlen(attrs->key);
-				*ptr++ = '=';
-				*ptr++ = '"';
-				strcpy(ptr, attrs->value);
-				ptr += strlen(attrs->value);
-				*ptr++ = '"';
+				blockAddChar(buf, cnt, ';');
+
+				blockAddString(buf, cnt, attrs->key);
+
+				blockAddChar(buf, cnt, '=');
+				blockAddChar(buf, cnt, '"');
+
+				blockAddString(buf, cnt, attrs->value);
+
+				blockAddChar(buf, cnt, '"');
+
 				attrs = attrs->next;
 			}
-			if(rSrc = rSrc->next)
-				*ptr++ = ',';
+
 			rSrc = rSrc->next;
 		}
 	}
-	*ptr = '\0';
+	*bufPtr = '\0';
+
 	LWIP_DEBUGF(COAP_DEBUG,(".well-known reply: %s", buf));
-	coap_reply(pkt, buf, rt_strlen(buf), COAP_CODE(205));
+
+	uint8_t format = mime_application_link_format;
+	coap_option_t *optList;
+	coap_option_t *optBlock;
+
+	coap_addOptionList(&optList, coap_content_format, &format, 1, 0);
+
+	if(cntRunning > cntEnd || cntStart != 0)
+	{
+		optBlock = coap_blockCreateOpt(64, (cntStart/64), 0);
+		coap_addOptionToList(&optList, optBlock);
+	}
+
+	coap_reply(pkt, buf, rt_strlen(buf), COAP_CODE(205), optList);
 
 }
 

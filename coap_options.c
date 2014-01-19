@@ -51,3 +51,58 @@ void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len
 		sll_insertBefore(&pkt->options, opt, tempOpt);
 	}
 }
+
+void coap_addOptionList(coap_option_t **optList, uint8_t optNum, uint8_t *data, uint32_t len, uint8_t optFormat)
+{
+	RT_ASSERT(optList);
+
+	coap_option_t *opt = (coap_option_t *)coap_malloc(sizeof(coap_option_t) + len);
+	coap_option_t *tempOpt = *optList;
+
+	opt->num = optNum;
+	opt->len = len;
+	opt->format = optFormat;
+	opt->next = NULL;
+	memcpy(opt->value, data, len);
+
+	//Need to make sure that the options are in ascending order also if the number is the same put it after existing
+
+	if(tempOpt == NULL)
+		tempOpt = opt;
+	else
+	{
+		while(tempOpt->num <= opt->num )
+			SLL_NEXT(tempOpt);
+
+		sll_insertBefore(optList, opt, tempOpt);
+	}
+}
+
+void coap_addOptionToList(coap_option_t **optList, coap_option_t *opt)
+{
+	coap_option_t *tempOpt = *optList;
+
+	if(tempOpt == NULL)
+		tempOpt = opt;
+	else
+	{
+		while(tempOpt->num <= opt->num )
+			SLL_NEXT(tempOpt);
+
+		sll_insertBefore(optList, opt, tempOpt);
+	}
+}
+
+coap_option_t *coap_createOption(uint8_t optNum, uint8_t *data, uint32_t len, uint8_t optFormat)
+{
+
+		coap_option_t *opt = (coap_option_t *)coap_malloc(sizeof(coap_option_t) + len);
+
+		opt->num = optNum;
+		opt->len = len;
+		opt->format = optFormat;
+		opt->next = NULL;
+		memcpy(opt->value, data, len);
+
+		return opt;
+}

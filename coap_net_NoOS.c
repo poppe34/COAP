@@ -1,5 +1,5 @@
 /*
- * coap_net_NoOS.c
+s * coap_net_NoOS.c
  *
  *  Created on: Aug 1, 2013
  *      Author: poppe
@@ -48,6 +48,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 	coap_resource_t *foundRsrc;
 	coap_option_t *opt;
 	coap_pkt_t *pkt = (coap_pkt_t *)coap_malloc(sizeof(coap_pkt_t));
+
 	memset(pkt, '\0', sizeof(coap_pkt_t));
 
 	pkt->ip_addr = addr;
