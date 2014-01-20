@@ -74,7 +74,7 @@ void coap_addOptionList(coap_option_t **optList, uint8_t optNum, uint8_t *data, 
 		while(tempOpt->num <= opt->num )
 			SLL_NEXT(tempOpt);
 
-		sll_insertBefore(optList, opt, tempOpt);
+		sll_insertBefore(optList, tempOpt, opt);
 	}
 }
 

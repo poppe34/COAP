@@ -403,7 +403,7 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 	}
 	*bufPtr = '\0';
 
-	LWIP_DEBUGF(COAP_DEBUG,(".well-known reply: %s", buf));
+	LWIP_DEBUGF(COAP_DEBUG,(".well-known reply: %s\n", buf));
 
 	uint8_t format = mime_application_link_format;
 	coap_option_t *optList;
@@ -413,7 +413,7 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 
 	if(cntRunning > cntEnd || cntStart != 0)
 	{
-		optBlock = coap_blockCreateOpt(64, (cntStart/64), 0);
+		optBlock = coap_blockCreateOpt(64, (cntStart/64), (cntRunning > cntEnd ? -1 : 0));
 		coap_addOptionToList(&optList, optBlock);
 	}
 

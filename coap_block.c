@@ -23,6 +23,19 @@ coap_option_t *coap_blockCreateOpt(uint16_t size, uint32_t offset, uint8_t more)
 	if(offset > 15)
 		optLen++;
 
-	return coap_createOption(coap_block2, (&block+2), optLen, NULL);
+	return coap_createOption(coap_block2, (&block+(3-optLen)), optLen, NULL);
 }
 
+uint32_t coap_blockSize(coap_option_t *opt)
+{
+	coap_block_t block;
+	uint32_t optLen = opt->len;
+	uint32_t blockLen;
+
+	rt_memcpy((&block + (3 - optLen)), opt->value, optLen);
+	blockLen = block.bits.szx << 4;
+
+	LWIP_DEBUGF(COAP_DEBUG, ("block len: %i", blockLen));
+
+	return blockLen;
+}

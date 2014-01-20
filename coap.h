@@ -95,6 +95,13 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size);
  */
 coap_option_t *coap_findOption(coap_pkt_t *pkt, uint16_t num);
 void coap_addOption(coap_pkt_t *pkt, uint8_t optNum, uint8_t *data, uint32_t len, uint8_t optFormat);
+void coap_addOptionToList(coap_option_t **optList, coap_option_t *opt);
+
+/**
+ * coap_block.c
+ */
+uint32_t coap_blockSize(coap_option_t *opt);
+coap_option_t *coap_blockCreateOpt(uint16_t size, uint32_t offset, uint8_t more);
 
 /**
  * coap_resources.c

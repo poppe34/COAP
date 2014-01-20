@@ -9,7 +9,7 @@
 #define COAP_BLOCK_H_
 
 #define declareBlockVar(buffer, size, count) \
-											uint8_t buffer[size+1]; 								\
+											uint8_t buffer[size+2]; 								\
 											uint8_t *buffer##Ptr = buffer; 						\
 											uint32_t count##Running = 0; 						\
 											uint32_t count##Start = pkt->block.offset * size; 	\
