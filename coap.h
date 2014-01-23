@@ -79,7 +79,7 @@ void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code, coap_o
  */
 uint32_t coap_Hash(const char *str);
 uint32_t coap_runningHash(const char *str, uint32_t runHash);
-uint32_t coap_parse_bytes(uint8_t *buf, uint32_t len);
+uint32_t coap_parseUint(uint8_t *buf, uint32_t len);
 
 /**
  * coap_net
@@ -90,7 +90,7 @@ coap_err_t coapd_sendto(uint8_t *buf, uint32_t len, ip_addr_t *addr, u16_t port)
  * coap_encode.c
  */
 uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size);
-uint8_t coap_encodeBytes(uint8_t *buf, uint32_t num);
+uint8_t coap_encodeUint(uint8_t *buf, uint32_t num);
 
 /**
  * coap_option.c

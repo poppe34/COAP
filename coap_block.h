@@ -8,13 +8,16 @@
 #ifndef COAP_BLOCK_H_
 #define COAP_BLOCK_H_
 
+#define blockSZXtoSize(szx)		1 << (szx + 4)
+#define blockSizetoSZX(size) 	size >> 5
+
 #define declareBlockVar(buffer, size, count) \
 											uint8_t buffer[size+1]; 								\
 											uint8_t *buffer##Ptr = buffer; 						\
 											uint32_t count##Running = 0; 						\
 											uint32_t count##Start = pkt->block.num * size; 	\
 											uint32_t count##End = count##Start + size; \
-											uint32_t tempLen;
+											uint32_t Len;
 
 
 #define blockAddChar(buffer, count, char) do { 			\
@@ -25,26 +28,25 @@
 	count##Running++; 									\
 	}while(0)
 
-#define blockDistToStart(count)
+#define blockDistToStart(count) 			(count##Running < count##Start ? count##Start - count##Running : 0)
+#define blockBufferSize(count)				(count##End - count##Start)
+#define blockLenInBuffer(count, size) 		(MIN((size - blockDistToStart(count)), (blockBufferSize(count))))
 
 #define blockAddMem(buffer, count, memPtr, size) do\
 	{ \
-		tempLen = size; \
+		Len = size; \
 		\
-		if ((count##Running + tempLen) >= count##Start && count##Running < count##Start)\
+		if ((count##Running + Len) >= count##Start && count##Running < count##Start)\
 		{ \
-			uint32_t lenTo = count##Start - count##Running; \
-			rt_memcpy(buffer##Ptr, (memPtr + lenTo), MIN((tempLen - lenTo), (count##End - count##Start))); \
-			buffer##Ptr +=  MIN((tempLen - lenTo), (count##End - count##Start)); \
-			count##Running += (tempLen); \
-			break; \
-		}\
+			rt_memcpy(buffer##Ptr, (memPtr + blockDistToStart(count)), blockLenInBuffer(count, Len)); \
+			buffer##Ptr +=  blockLenInBuffer(count, Len); \
+		} else\
 		if(count##Start <= count##Running && count##Running < count##End )  \
 		{ \
-			rt_memcpy(buffer##Ptr, memPtr, MIN(tempLen, (count##End - count##Running))); \
-			buffer##Ptr += MIN(tempLen, (count##End - count##Running)); \
+			rt_memcpy(buffer##Ptr, memPtr, MIN(Len, (count##End - count##Running))); \
+			buffer##Ptr += MIN(Len, (count##End - count##Running)); \
 		} \
-		count##Running += tempLen; \
+		count##Running += Len; \
 	}while(0)
 
 
@@ -73,5 +75,5 @@ typedef struct coap_block {
 
 
 #define COAP_BLOCK_LAST_BYTE(opt) opt
-#define COAP_ENCODE_BYTES(buffer, bytes) coap_encodeBytes(buffer, bytes)
+#define COAP_ENCODE_BYTES(buffer, bytes) coap_encodeUint(buffer, bytes)
 #endif /* COAP_BLOCK_H_ */

@@ -19,7 +19,7 @@ void coap_sendPkt(coap_pkt_t *pkt)
 	coap_encodePkt(pkt, &buf, 128);
 }
 
-uint8_t coap_encodeBytes(uint8_t *buf, uint32_t num)
+uint8_t coap_encodeUint(uint8_t *buf, uint32_t num)
 {
 	uint32_t cnt, value, index;
 

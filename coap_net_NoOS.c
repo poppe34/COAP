@@ -66,7 +66,7 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 
 		pkt->block.m = opt->value[opt->len-1] & 0x8;
 		pkt->block.szx = opt->value[opt->len-1] & 0x7;
-		pkt->block.num = coap_parse_bytes(opt->value, (opt->len - 1));
+		pkt->block.num = coap_parseUint(opt->value, (opt->len - 1));
 		pkt->block.num = pkt->block.num << 4 | ((opt->value[opt->len-1] & 0xf0) >> 4);
 
 
