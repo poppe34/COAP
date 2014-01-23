@@ -32,11 +32,7 @@ void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code, coap_o
 	RT_ASSERT(pkt);
 	coap_pkt_t outPkt;
 
-	uint8_t *newPtr;
-	uint8_t format = mime_application_link_format;
 	memset(&outPkt, 0, sizeof(coap_pkt_t));
-
-	newPtr = (uint8_t *)&outPkt.header;
 
 	outPkt.header.bits.ver = pkt->header.bits.ver;
 	outPkt.header.bits.t = COAP_ACK;
@@ -58,8 +54,6 @@ void coap_reply(coap_pkt_t *pkt, uint8_t *data, size_t len, uint8_t code, coap_o
 
 	outPkt.payload.data = data;
 	outPkt.payload.len = len;
-
-	coap_addOption(&outPkt, coap_content_format, &format, 1, 0);
 
 	LWIP_DEBUGF(COAP_DEBUG, ("Sending Coap Code: %i with data len %i\n", code, len));
 

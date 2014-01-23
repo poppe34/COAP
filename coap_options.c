@@ -68,7 +68,7 @@ void coap_addOptionList(coap_option_t **optList, uint8_t optNum, uint8_t *data, 
 	//Need to make sure that the options are in ascending order also if the number is the same put it after existing
 
 	if(tempOpt == NULL)
-		tempOpt = opt;
+		*optList = opt;
 	else
 	{
 		while(tempOpt->num <= opt->num )
@@ -83,13 +83,20 @@ void coap_addOptionToList(coap_option_t **optList, coap_option_t *opt)
 	coap_option_t *tempOpt = *optList;
 
 	if(tempOpt == NULL)
-		tempOpt = opt;
+		*optList = opt;
 	else
 	{
 		while(tempOpt->num <= opt->num )
+		{
+			if(tempOpt->next == NULL);
+			{
+				tempOpt->next = opt;
+				return;
+			}
 			SLL_NEXT(tempOpt);
+		}
 
-		sll_insertBefore(optList, opt, tempOpt);
+		sll_insertBefore(optList, tempOpt, opt);
 	}
 }
 
@@ -97,6 +104,7 @@ coap_option_t *coap_createOption(uint8_t optNum, uint8_t *data, uint32_t len, ui
 {
 
 		coap_option_t *opt = (coap_option_t *)coap_malloc(sizeof(coap_option_t) + len);
+		rt_memset(opt, '\0', (sizeof(coap_option_t) + len));
 
 		opt->num = optNum;
 		opt->len = len;

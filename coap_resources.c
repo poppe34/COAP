@@ -337,7 +337,7 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 
 	declareBlockVar(buf, 64, cnt);
 
-	LWIP_DEBUGF(COAP_DEBUG, ("Blockwise receive Block:%i Start:%i End:%i\n", pkt->block.bits.num, cntStart, cntEnd));
+	LWIP_DEBUGF(COAP_DEBUG, ("Blockwise receive Block:%i Start:%i End:%i\n", pkt->block.num, cntStart, cntEnd));
 
 	coap_attribute_t *attrs;
 	coap_option_t *opt;
@@ -361,53 +361,52 @@ static void rSrcDirCB(coap_pkt_t *pkt, coap_resource_t *rSrc)
 			}
 		}
 	}
+	while(rSrc)
 	{
-		while(rSrc)
+		 // This gives me the format ---> <URI>;attr="value";attr="value, <URI>;attr="value"
+		coap_attribute_t *attrs;
+		//URI-Reference
+
+		if(cntRunning != 0)
 		{
-			 // This gives me the format ---> <URI>;attr="value";attr="value, <URI>;attr="value"
-			coap_attribute_t *attrs;
-			//URI-Reference
-
-			if(cntRunning != 0)
-			{
-				blockAddChar(buf, cnt, ',');
-			}
-
-			blockAddChar(buf, cnt, '<');
-
-			blockAddString(buf, cnt, rSrc->fullUri);
-
-			blockAddChar(buf, cnt, '>');
-
-			//blockReturn(cnt);
-			//link-params
-			attrs = rSrc->attrList->first;
-			while(attrs)
-			{
-				blockAddChar(buf, cnt, ';');
-
-				blockAddString(buf, cnt, attrs->key);
-
-				blockAddChar(buf, cnt, '=');
-				blockAddChar(buf, cnt, '"');
-
-				blockAddString(buf, cnt, attrs->value);
-
-				blockAddChar(buf, cnt, '"');
-
-				attrs = attrs->next;
-			}
-
-			rSrc = rSrc->next;
+			blockAddChar(buf, cnt, ',');
 		}
+
+		blockAddChar(buf, cnt, '<');
+
+		blockAddString(buf, cnt, rSrc->fullUri);
+
+		blockAddChar(buf, cnt, '>');
+
+		//blockReturn(cnt);
+		//link-params
+		attrs = rSrc->attrList->first;
+		while(attrs)
+		{
+			blockAddChar(buf, cnt, ';');
+
+			blockAddString(buf, cnt, attrs->key);
+
+			blockAddChar(buf, cnt, '=');
+			blockAddChar(buf, cnt, '"');
+
+			blockAddString(buf, cnt, attrs->value);
+
+			blockAddChar(buf, cnt, '"');
+
+			attrs = attrs->next;
+		}
+
+		rSrc = rSrc->next;
+
 	}
 	*bufPtr = '\0';
 
 	LWIP_DEBUGF(COAP_DEBUG,(".well-known reply: %s\n", buf));
 
 	uint8_t format = mime_application_link_format;
-	coap_option_t *optList;
-	coap_option_t *optBlock;
+	coap_option_t *optList = NULL;
+	coap_option_t *optBlock = NULL;
 
 	coap_addOptionList(&optList, coap_content_format, &format, 1, 0);
 

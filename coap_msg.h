@@ -40,7 +40,6 @@ struct coap_attribute;
 
 typedef struct coap_pkt_s coap_pkt_t;
 typedef struct coap_resource coap_resource_t;
-typedef struct coap_block coap_block_t;
 typedef struct coap_uriPath coap_uriPath_t;
 typedef struct coap_option coap_option_t;
 typedef struct coap_attribute coap_attribute_t;

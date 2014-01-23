@@ -67,7 +67,6 @@ void sll_insertAfter(sll_list_t list, void *old, void *new)
 void sll_insertBefore(sll_list_t list, void *old, void *new)
 {
 	RT_ASSERT(list);
-	RT_ASSERT(old);
 	RT_ASSERT(new);
 
 	sll_node_t n1 = (sll_node_t)list;

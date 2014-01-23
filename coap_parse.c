@@ -21,6 +21,16 @@
 static int coap_parseOptions(coap_pkt_t *pkt, void **buffer, size_t size);
 
 
+
+uint32_t coap_parse_bytes(uint8_t *buf, uint32_t len)
+{
+  uint32_t value = 0, cnt;
+  for (cnt = 0; cnt < len; ++cnt)
+    value = (value << 8) + buf[cnt];
+
+  return value;
+}
+
 /**
  * take in a packet and break it down.
  */

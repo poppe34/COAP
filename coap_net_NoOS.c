@@ -64,22 +64,18 @@ static coap_err_t coapd_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_
 	if(opt)
 	{
 
-		uint32_t tempBlock = 0;
+		pkt->block.m = opt->value[opt->len-1] & 0x8;
+		pkt->block.szx = opt->value[opt->len-1] & 0x7;
+		pkt->block.num = coap_parse_bytes(opt->value, (opt->len - 1));
+		pkt->block.num = pkt->block.num << 4 | ((opt->value[opt->len-1] & 0xf0) >> 4);
 
-		for(uint8_t x=0; x<opt->len; x++)
-		{
-			tempBlock |= (opt->value[x] << (8 * x));
-			//tempBlock |= (opt->value[x] << (24 - (8*x)));
-		}
 
-		pkt->block.pkt = tempBlock;
-
-		LWIP_DEBUGF(COAP_DEBUG, ("Block cnt: %i size: %i %s", pkt->block.bits.num, pkt->block.bits.szx,
-				(pkt->block.bits.m ? "with more to come\n":"\n")));
+		LWIP_DEBUGF(COAP_DEBUG, ("Block cnt: %i size: %i %s", pkt->block.num, pkt->block.szx, \
+				(pkt->block.m ? "with more to come\n":"\n")));
 
 
 		/* FIXME: I need to make this use actual block size instead of just 64 */
-		pkt->block.offset = pkt->block.bits.num * (64);
+		//pkt->block.offset = pkt->block.bits.num * (64);
 	}
 	err = coap_resourceDiscovery(pkt, &foundRsrc);
 

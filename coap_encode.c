@@ -18,6 +18,29 @@ void coap_sendPkt(coap_pkt_t *pkt)
 	uint8_t *buf = &outBuf;
 	coap_encodePkt(pkt, &buf, 128);
 }
+
+uint8_t coap_encodeBytes(uint8_t *buf, uint32_t num)
+{
+	uint32_t cnt, value, index;
+
+	//Get the number of bytes that are used get the other bytes out to save space
+	for(cnt = 0, value = num; cnt < sizeof(uint32_t) && value; cnt++)
+		value >>= 8;
+
+	//we are done with the value variable keep the cnt so we can return it
+	value = cnt;
+
+	//reverse the order of the bytes used
+	while(cnt--)
+	{
+		buf[cnt] = num & 0xff;
+		num >>= 8;
+	}
+
+	return value;
+}
+
+
 /**
  * This is the main function call to send the Coap Pkt
  */
@@ -108,17 +131,14 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size)
 		opt_num = opt->num;
 		opt_len = opt->len;
 
+		delta = opt_num - running_num;
+
 		uint32_t sizeNeeded = opt->len + 1;
+
 		if(delta > 12)
 		{
 			sizeNeeded++;
 			if(delta > 269)
-				sizeNeeded++;
-		}
-		if(opt_len >12)
-		{
-			sizeNeeded++;
-			if(opt_len > 269)
 				sizeNeeded++;
 		}
 
@@ -126,8 +146,6 @@ uint8_t *coap_encodeOptions(coap_pkt_t *pkt, uint8_t *buf, uint32_t size)
 			return -1;
 
 		LWIP_ASSERT("Options are not in descending order\n", running_num <= opt_num);
-
-		delta = opt_num - running_num;
 
 		//get the location that the option number and len go
 		deltaLen = buf++;
